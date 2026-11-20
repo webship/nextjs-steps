@@ -162,7 +162,7 @@ A green first run prints every step, then the summary (the starter feature of `n
 
 ```
 3 scenarios (3 passed)
-11 steps (11 passed)
+10 steps (10 passed)
 [webship-js] HTML report → …/nextjs-tests/tests/reports/cucumber_report.html
 ```
 
@@ -260,6 +260,28 @@ of a page, network mocks and the accessibility audit are webship-js's own steps
 should be "..."`, `current url should have the "..." parameter with the "..."
 value`, `the response status code should be 404`): this pack adds only what the
 framework decides.
+
+## Beside other packs
+
+The pack loads beside webship-js and the Diffy pack with no phrase in common.
+Some of its phrases are those of other platform packs on purpose, so that a
+tester reads one vocabulary everywhere:
+
+- the session (`I am a logged in user with the "…" user`, `I log in as "…"
+  with the login form`, `I log in with the email "…" and the password "…"`,
+  `I log out`, `I should be logged in`, `I should be logged in as "…"`, `I
+  should see the login form`) with the packs of server-side platforms (the
+  Laravel, CodeIgniter, Symfony, Moodle, MediaWiki, Odoo, TYPO3, WordPress,
+  Drupal core, django CMS, Joomla and Backdrop CMS packs share some or all of
+  them);
+- the behaviour of a site that hydrates (`I click the link "…" without a full
+  page reload`, `I go back without a full page reload`, the route announcer, a
+  prefetched page, `I should see a hydrated page`, `there should be no
+  hydration errors`, a production build, the 404 pages) with the Gatsby and
+  Astro packs;
+- `I wait for the page to be ready` with the Moodle pack.
+
+Load two such packs in two profiles of one project, one per site.
 
 ## How the steps find things and wait
 
