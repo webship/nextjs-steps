@@ -1,0 +1,141 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - 2.0.x
+  pull_request:
+    branches:
+      - 2.0.x
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# The runs of a pull request share a group, so a newer push cancels the run
+# it supersedes. Every other run (a push to 2.0.x, a run started by hand)
+# gets a group of its own: it is never queued behind another run, and never
+# cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  cucumber:
+    # The Learn course's finished app on the current release (16.x, the Active LTS line) and on the
+    # Maintenance LTS line (15.x); the same app on the development server, for the error overlay; the
+    # app create-next-app makes with its defaults; and the official Pages Router example.
+    name: nextjs-steps test suite (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: 'learn, 16.4.6'
+            app: learn
+            next: '16.4.6'
+            mode: production
+            must-fail: true
+          - name: 'learn, 15.5.29'
+            app: learn
+            next: '15.5.29'
+            mode: production
+            must-fail: false
+            # What the 15.x line does not do: a loading state while a search streams in.
+            tags: '@learn and not @development and not @since-16 and not @wip and not @must-fail'
+          - name: 'learn, 16.4.6, development server'
+            app: learn
+            next: '16.4.6'
+            mode: development
+            must-fail: false
+          - name: 'default app, 16.4.6'
+            app: default
+            next: '16.4.6'
+            mode: production
+            must-fail: false
+          - name: 'pages router example, 16.4.6'
+            app: pages
+            next: '16.4.6'
+            mode: production
+            must-fail: false
+    env:
+      HEADLESS: 'true'
+      FORCE_COLOR: '1'
+      SITE_DIR: ${{ github.workspace }}/../app-site
+      APP: ${{ matrix.app }}
+      NEXT_VERSION: ${{ matrix.next }}
+      SERVER_MODE: ${{ matrix.mode }}
+      CUCUMBER_TAGS: ${{ matrix.tags }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check the JSDoc examples and feature steps against the step regexes
+        run: npm run test:examples
+
+      - name: Check that a feature named on the command line runs alone
+        run: npm run test:paths
+
+      - name: Run cucumber-js dry-run (ambiguity / undefined step check)
+        run: npx cucumber-js --dry-run
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Install DDEV
+        uses: ddev/github-action-setup-ddev@v1
+        with:
+          autostart: false
+
+      - name: Build the app with DDEV (create-next-app, the release of this lane, PostgreSQL for the Learn app)
+        run: .github/scripts/build-ddev-site.sh
+
+      - name: Check the app is the one cucumber.js runs against by default
+        run: |
+          DEFAULT_URL="$(LAUNCH_URL= node -e "console.log(require('./cucumber.js').default.worldParameters.launchUrl)")"
+          echo "Built: $LAUNCH_URL, default: $DEFAULT_URL"
+          test "${LAUNCH_URL%/}" = "$DEFAULT_URL"
+
+      - name: Run the test suite
+        run: npx cucumber-js
+
+      - name: Run the test suite again (it leaves the app as it found it)
+        run: npx cucumber-js
+
+      - name: Run the assertions that must fail
+        if: matrix.must-fail
+        run: npm run test:must-fail
+
+      - name: Show the last lines of the app's server
+        if: failure()
+        run: docker logs --tail 80 ddev-nextjssteps-web || true
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-report-${{ matrix.app }}-${{ matrix.next }}-${{ matrix.mode }}
+          path: tests/reports/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload failure screenshots and videos
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-screenshots-${{ matrix.app }}-${{ matrix.next }}-${{ matrix.mode }}
+          path: |
+            screenshots/
+            videos/
+          retention-days: 14
+          if-no-files-found: ignore
