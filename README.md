@@ -40,7 +40,7 @@ pull request, then the assertions that must fail; see
 
 ## From nothing to a green run
 
-What the machine needs: Docker, [DDEV](https://ddev.com), git, python3, and Node.js 20 or later with npm. The app, its Node.js 24 and its PostgreSQL run in DDEV's containers.
+What the machine needs: Docker, [DDEV](https://ddev.com), git, python3, and Node.js 24 or later with npm. The app, its Node.js 24 and its PostgreSQL run in DDEV's containers.
 
 **1. The app.** The pack's own build script (the one CI runs) makes the app in a DDEV project of type `generic`: the finished app of the official Learn course (a dashboard of invoices and customers with a login), made with `create-next-app` from the course's example, moved to 16.4.6, its database (PostgreSQL 17, in a container of the project) seeded by the course's own seed, then the suite's own test data and the two accounts of [Test users](#test-users), then built for production and served by the web container. It takes about two minutes.
 
@@ -188,7 +188,7 @@ Not tested: the framework's own tests (it has its own); the app's own business l
 
 ## Requirements
 
-- Node.js 20 or later
+- Node.js 24 or later
 - A webship-js 2.0 test project (webship-js 2.0.16 or later)
 - An app of the 15.x or 16.x line (proven on 15.5.29 and 16.4.6), served as a production build (the development server for the `@development` steps); for the session steps, a login form and an address that answers with the session (see [Accounts](#accounts))
 
