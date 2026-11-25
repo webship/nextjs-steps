@@ -1,6 +1,6 @@
 {
   "name": "@webship-js/nextjs-steps",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Cucumber step definitions for apps built with Next.js, a plugin for webship-js (Playwright and Cucumber): hydration, client-side navigation and the route announcer, prefetching, streaming and loading states, form actions and their pending states, the not-found and error pages, the image component's lazy and optimized images, static and dynamic pages, the production build and the development error overlay, and a login form with sessions, each step waiting on the framework's own signals, never on a clock.",
   "main": "tests/step-definitions/nextjs-helpers.js",
   "files": [
